@@ -1,0 +1,46 @@
+version: '3.0'
+
+services:
+  keycloak:
+    image: jboss/keycloak:4.6.0.Final
+    restart: on-failure
+    command:
+    - "-b"
+    - "0.0.0.0"
+    - "-Dkeycloak.migration.action=import"
+    - "-Dkeycloak.migration.provider=dir"
+    - "-Dkeycloak.migration.dir=/config/"
+    - "-Dkeycloak.migration.strategy=IGNORE_EXISTING"
+    volumes:
+    - ./config:/config/
+    environment:
+    - KEYCLOAK_USER=admin
+    - KEYCLOAK_PASSWORD=password
+    - DB_VENDOR=postgres
+    - DB_USER=admin
+    - DB_PASSWORD=password
+    - DB_ADDR=keycloak-db
+    - DB_PORT=5432
+    - DB_DATABASE=keycloak
+    ports:
+    - "8081:8080"
+    depends_on:
+    - keycloak-db
+    networks:
+    - backend
+
+  keycloak-db:
+    image: postgres
+    volumes:
+    - ./data/pgdata:/pgdata
+    environment:
+    - POSTGRES_USER=admin
+    - POSTGRES_PASSWORD=password
+    - POSTGRES_DB=keycloak
+    - PGDATA=/pgdata
+    networks:
+    - backend
+
+networks:
+  backend:
+    driver: bridge
